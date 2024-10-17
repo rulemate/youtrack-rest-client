@@ -10,9 +10,10 @@ import {SprintEndpoint} from "./endpoints/sprint";
 import {WorkItemEndpoint} from "./endpoints/workitem";
 import {CommentEndpoint} from "./endpoints/comment";
 import axios from "axios";
-import {AxiosRequestConfig, AxiosInstance} from "axios/index";
+import {AxiosRequestConfig, AxiosInstance} from "axios";
 import {YoutrackClient} from "./youtrack_client";
 import {GetRequestOptions, RequestOptions} from "./options/request_options";
+import {ArticleEndpoint} from "./endpoints/article";
 
 export class Youtrack implements YoutrackClient {
 
@@ -27,6 +28,7 @@ export class Youtrack implements YoutrackClient {
     public readonly sprints: SprintEndpoint;
     public readonly workItems: WorkItemEndpoint;
     public readonly comments: CommentEndpoint;
+    public readonly articles: ArticleEndpoint;
 
     public constructor(options: YoutrackTokenOptions) {
         this.defaultRequestOptions = {
@@ -45,6 +47,7 @@ export class Youtrack implements YoutrackClient {
         this.sprints = new SprintEndpoint(this);
         this.workItems = new WorkItemEndpoint(this);
         this.comments = new CommentEndpoint(this);
+        this.articles = new ArticleEndpoint(this);
     }
 
     public post(url: string, params: RequestOptions = {}, headers: {} = {}): Promise<any> {

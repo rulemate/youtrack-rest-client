@@ -12,6 +12,8 @@ export * from "./entities/agile";
 export * from "./entities/sprint";
 export * from "./entities/user";
 export * from "./entities/workItem";
+export * from "./entities/article";
+export * from "./entities/visibility";
 
 export * from "./endpoints/comment";
 export * from "./endpoints/issue";
@@ -21,3 +23,4 @@ export * from "./endpoints/sprint";
 export * from "./endpoints/tag";
 export * from "./endpoints/user";
 export * from "./endpoints/workitem";
+export * from "./endpoints/article";
