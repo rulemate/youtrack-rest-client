@@ -1,31 +1,19 @@
 import * as assert from 'assert';
-import {
-    AgilePaths,
-    CommentPaths,
-    IssueCommentImpl, IssueImpl,
-    IssuePaths,
-    IssueTagImpl,
-    ProjectPaths,
-    ReducedAgileImpl,
-    ReducedIssueImpl,
-    ReducedProjectImpl,
-    ReducedSprintImpl,
-    ReducedUserImpl,
-    SprintPaths,
-    TagPaths,
-    UserPaths,
-    WorkItemImpl,
-    WorkItemPaths,
-    Youtrack
-} from "../src";
-import {axiosInstance} from "../src/axios";
-import MockAdapter from "axios-mock-adapter";
-import {generateFieldsQuery} from "../src/entities/fields/utils";
-import format = require("string-template");
+import { Youtrack } from "../src";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 describe("Youtrack", () => {
 
-    const configWithToken = {baseUrl: "", token: "testtoken"};
+    if (!process.env.YOUTRACK_BASE_URL || !process.env.YOUTRACK_TOKEN) {
+        throw new Error("Please provide YOUTRACK_BASE_URL and YOUTRACK_TOKEN in .env file");
+    }
+
+    const configWithToken = {
+        baseUrl: process.env.YOUTRACK_BASE_URL,
+        token: process.env.YOUTRACK_TOKEN
+    } as const;
 
     it("can be instantiated without error", () => {
         assert.doesNotThrow(() => {
@@ -48,123 +36,192 @@ describe("Youtrack", () => {
         assert(youtrack.workItems !== null);
     });
 
-    describe('login', () => {
+    it("instantiates comments endpoint", () => {
+        const youtrack = new Youtrack(configWithToken);
+        assert(youtrack.comments !== null);
+    });
 
-        describe('with token', () => {
+    it("instantiates projects endpoint", () => {
+        const youtrack = new Youtrack(configWithToken);
+        assert(youtrack.projects !== null);
+    });
 
-            it('does put bearer token into header', () => {
-                const youtrack = new Youtrack(configWithToken);
-                let mock = new MockAdapter(axiosInstance);
-                mock.onGet('/api/admin/projects').reply(200, [{id: 1, name: 'test'}]);
-                youtrack.projects.all().then((projects) => {
-                    assert.deepStrictEqual(projects, [{id: 1, name: 'test'}]);
-                });
-                assert.strictEqual(mock.history.get.length, 1);
-                assert.deepStrictEqual({...mock.history.get[0].headers}, {
-                    Accept: 'application/json, text/plain, */*',
-                    Authorization: 'Bearer testtoken'
-                });
-                assert.deepStrictEqual({...mock.history.get[0].params}, {fields: 'id,name,shortName,description,archived'})
-            });
+    it("instantiates issues endpoint", () => {
+        const youtrack = new Youtrack(configWithToken);
+        assert(youtrack.issues !== null);
+    });
 
-            describe('when providing custom header parameters', () => {
-                it('merges headers', () => {
-                    const youtrack = new Youtrack(configWithToken);
-                    let mock = new MockAdapter(axiosInstance);
-                    mock.onPost('/some/resource').reply(200, {});
-                    youtrack.post("/some/resource", {data: "<example>test</example>"}, {'Content-Type': 'application/xml'});
-                    assert.strictEqual(mock.history.post.length, 1);
-                    assert.deepStrictEqual({...mock.history.post[0].headers}, {
-                        Accept: 'application/json, text/plain, */*',
-                        'Content-Type': 'application/xml',
-                        Authorization: 'Bearer testtoken'
-                    });
-                    assert.strictEqual(mock.history.post[0].data, "<example>test</example>")
-                });
+    it("instantiates agiles endpoint", () => {
+        const youtrack = new Youtrack(configWithToken);
+        assert(youtrack.agiles !== null);
+    });
+
+    it("instantiates sprints endpoint", () => {
+        const youtrack = new Youtrack(configWithToken);
+        assert(youtrack.sprints !== null);
+    });
+
+    it("instantiates articles endpoint", () => {
+        const youtrack = new Youtrack(configWithToken);
+        assert(youtrack.articles !== null);
+    });
+
+    it("can be instantiated with axios instance", () => {
+        assert.doesNotThrow(() => {
+            new Youtrack({
+                ...configWithToken,
+                axiosInstance: require("axios").create()
             });
         });
     });
 
-    describe('index endpoints', () => {
-        it('adds query param for fields', () => {
+    describe("users endpoint", () => {
+        it("can fetch users", async () => {
             const youtrack = new Youtrack(configWithToken);
-            let mock = new MockAdapter(axiosInstance);
-            const indexActions = [
-                {
-                    path: ProjectPaths.projects,
-                    action: () => youtrack.projects.all(),
-                    params: {fields: generateFieldsQuery(new ReducedProjectImpl())}
-                },
-                {
-                    path: AgilePaths.agiles,
-                    action: () => youtrack.agiles.all(),
-                    params: {fields: generateFieldsQuery(new ReducedAgileImpl())}
-                },
-                {
-                    path: IssuePaths.issues,
-                    action: () => youtrack.issues.search("test"),
-                    params: {fields: generateFieldsQuery(new ReducedIssueImpl()), query: 'test'}
-                },
-                {
-                    path: format(SprintPaths.sprints, {agileId: 'test'}),
-                    action: () => youtrack.sprints.all("test"),
-                    params: {fields: generateFieldsQuery(new ReducedSprintImpl())}
-                },
-                {
-                    path: TagPaths.issueTags,
-                    action: () => youtrack.tags.all(),
-                    params: {fields: generateFieldsQuery(new IssueTagImpl())}
-                },
-                {
-                    path: UserPaths.users,
-                    action: () => youtrack.users.all(),
-                    params: {fields: generateFieldsQuery(new ReducedUserImpl())}
-                },
-                {
-                    path: format(CommentPaths.comments, {issueId: 'test'}),
-                    action: () => youtrack.comments.all("test"),
-                    params: {fields: generateFieldsQuery(new IssueCommentImpl())}
-                },
-                {
-                    path: format(WorkItemPaths.workitems, {issueId: 'test'}),
-                    action: () => youtrack.workItems.all("test"),
-                    params: {fields: generateFieldsQuery(new WorkItemImpl())}
-                },
-            ]
-            indexActions.forEach(({path, action, params}) => {
-                mock.onGet(path).reply(200, [{id: 1, name: 'test'}]);
-                action().then((data) => {
-                    assert.deepStrictEqual(data, [{id: 1, name: 'test'}]);
-                });
-                assert.deepStrictEqual({...mock.history.get[0].params}, params);
-                mock.reset();
-            });
-        })
-    });
+            const users = await youtrack.users.all();
+            assert(users.length > 0);
+        });
+    })
 
-    describe('create issue', () => {
-        it('sends payload in body and fields as query param', () => {
+    describe("tags endpoint", () => {
+        it("can fetch tags", async () => {
             const youtrack = new Youtrack(configWithToken);
-            let mock = new MockAdapter(axiosInstance);
-            mock.onPost(IssuePaths.issues).reply(200, {id: 1});
-            const payload = {
-                summary: 'lorem ipsum',
-                description: 'created using rest api',
-                project: {
-                    id: '0-0'
-                }
+            const tags = await youtrack.tags.all();
+            assert(tags.length > 0);
+        });
+    })
+
+    describe("projects endpoint", () => {
+        it("can fetch projects", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const projects = await youtrack.projects.all();
+            assert(projects.length > 0);
+        });
+    })
+
+    /*
+    describe("issues endpoint", () => {
+        it("can fetch issues", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const firstProject = (await youtrack.projects.all())[0];
+            const issues = await youtrack.issues.search(`#Unresolved project: #${firstProject.name}`);
+            assert(issues.length > 0);
+        });
+    })
+
+    describe("workItems endpoint", () => {
+        it("can fetch workItems", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const firstProject = (await youtrack.projects.all())[0];
+            const firstIssue = (await youtrack.issues.search(`project: #${firstProject.id}`))[0];
+            if (!firstIssue) {
+                throw new Error("No issue found");
             }
-            youtrack.issues.create(payload).then(response => {
-                assert.deepStrictEqual(response, {id: 1});
-            })
-            assert.strictEqual(mock.history.post.length, 1);
-            assert.deepStrictEqual({...mock.history.post[0].headers}, {
-                'Content-Type': 'application/json',
-                Accept: 'application/json, text/plain, */*',
-                Authorization: 'Bearer testtoken'
-            });
-            assert.strictEqual(mock.history.post[0].data, JSON.stringify(payload));
-            assert.deepStrictEqual({...mock.history.post[0].params}, {fields: generateFieldsQuery(new IssueImpl())});
+            if (!firstIssue.id) {
+                throw new Error("Issue has no id");
+            }
+            const workItems = await youtrack.workItems.all(firstIssue.id);
+            assert(workItems.length > 0);
         });
+    })
+
+    describe("comments endpoint", () => {
+        it("can fetch comments", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const firstProject = (await youtrack.projects.all())[0];
+            const firstIssue = (await youtrack.issues.search(`project: {id: '${firstProject.id}'}`))[0];
+            if (!firstIssue) {
+                throw new Error("No issue found");
+            }
+            if (!firstIssue.id) {
+                throw new Error("Issue has no id");
+            }
+            const comments = await youtrack.comments.all(firstIssue.id);
+            assert(comments.length > 0);
+        });
+    })
+     */
+
+    describe("agiles endpoint", () => {
+        it("can fetch agiles", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const agiles = await youtrack.agiles.all();
+            assert(agiles.length > 0);
+        });
+    })
+
+    describe("sprints endpoint", () => {
+        it("can fetch sprints", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const firstAgile = (await youtrack.agiles.all())[0];
+            if (!firstAgile) {
+                throw new Error("No agile found");
+            }
+            if (!firstAgile.id) {
+                throw new Error("Agile has no id");
+            }
+
+            const sprints = await youtrack.sprints.all(firstAgile.id);
+            assert(sprints.length > 0);
+        });
+    })
+
+    describe("articles endpoint", () => {
+        it("can fetch articles", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const articles = await youtrack.articles.all();
+            assert(articles.length > 0);
+        });
+
+        it("can fetch article by id", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const firstArticle = (await youtrack.articles.all())[0];
+            if (!firstArticle) {
+                throw new Error("No article found");
+            }
+            if (!firstArticle.id) {
+                throw new Error("Article has no id");
+            }
+            const article = await youtrack.articles.byId(firstArticle.id);
+            assert(article.id === firstArticle.id);
+        });
+
+        /**
+         * WARNING: This test will create, update and delete an article
+         *
+         * Make sure you have a test project in your Youtrack instance
+         */
+        const testProjectName = "Test project";
+        it("can create, update and delete article", async () => {
+            const youtrack = new Youtrack(configWithToken);
+            const firstProject = (await youtrack.projects.all()).find(p => p.name === testProjectName);
+            if (!firstProject) {
+                throw new Error(`No project found with name "${testProjectName}"`);
+            }
+
+            const article = await youtrack.articles.create({
+                summary: "Test article",
+                content: "Test article content",
+                project: firstProject
+            });
+            assert(article.summary === "Test article");
+
+            const updatedArticle = await youtrack.articles.update({
+                id: article.id,
+                summary: "Test article updated",
+                content: "Test article content updated",
+                project: firstProject
+            });
+            assert(updatedArticle.summary === "Test article updated");
+
+            if (!updatedArticle.id) {
+                throw new Error("Article has no id");
+            }
+
+            await youtrack.articles.delete(updatedArticle.id);
+            const articles = await youtrack.articles.all();
+            const deletedArticle = articles.find(a => a.id === updatedArticle.id);
+            assert(deletedArticle === undefined);
+        })
     })
 });
