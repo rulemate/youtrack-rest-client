@@ -1,6 +1,14 @@
 import {BaseEndpoint} from "./base";
 import {PaginationOptions} from "../options/pagination_options";
-import {Article, ArticleImpl} from "..";
+import {
+    Article,
+    ArticleAttachment,
+    ArticleAttachmentImpl,
+    ArticleComment, ArticleCommentImpl,
+    ArticleImpl,
+    ArticleTag,
+    ArticleTagImpl
+} from "..";
 
 export const ArticlePaths = {
     articles: '/articles',
@@ -18,32 +26,32 @@ export const ArticlePaths = {
 
 class AttachmentEndpoint extends BaseEndpoint {
 
-    public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<Article[]> {
-        return this.getResourceWithFields<Article[]>(this.format(ArticlePaths.attachments, {articleId}), ArticleImpl, {params: paginationOptions});
+    public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<ArticleAttachment[]> {
+        return this.getResourceWithFields<Article[]>(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {params: paginationOptions});
     }
 
-    public byId(articleId: string, attachmentId: string): Promise<Article> {
+    public byId(articleId: string, attachmentId: string): Promise<ArticleAttachment> {
         return this.getResourceWithFields<Article>(this.format(ArticlePaths.attachment, {
             articleId,
             attachmentId
-        }), ArticleImpl);
+        }), ArticleAttachmentImpl);
     }
 
     public delete(articleId: string, attachmentId: string): Promise<any> {
         return this.toPromise(this.client.delete(this.format(ArticlePaths.attachment, {articleId, attachmentId})));
     }
 
-    public create(articleId: string, attachment: Article): Promise<Article> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.attachments, {articleId}), ArticleImpl, {
+    public create(articleId: string, attachment: Article): Promise<ArticleAttachment> {
+        return this.postResourceWithFields<Article>(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {
             data: attachment
         });
     }
 
-    public update(articleId: string, attachment: Article): Promise<Article> {
+    public update(articleId: string, attachment: Article): Promise<ArticleAttachment> {
         return this.postResourceWithFields<Article>(this.format(ArticlePaths.attachment, {
             articleId,
             attachmentId: attachment.id
-        }), ArticleImpl, {
+        }), ArticleAttachmentImpl, {
             data: attachment
         });
     }
@@ -91,45 +99,45 @@ class ParentArticleEndpoint extends BaseEndpoint {
 
 class TagEndpoint extends BaseEndpoint {
 
-        public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<Article[]> {
-            return this.getResourceWithFields<Article[]>(this.format(ArticlePaths.tags, {articleId}), ArticleImpl, {params: paginationOptions});
-        }
+    public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<ArticleTag[]> {
+        return this.getResourceWithFields<ArticleTag[]>(this.format(ArticlePaths.tags, {articleId}), ArticleTagImpl, {params: paginationOptions});
+    }
 
-        public byId(articleId: string, tagId: string): Promise<Article> {
-            return this.getResourceWithFields<Article>(this.format(ArticlePaths.tag, {
-                articleId,
-                tagId
-            }), ArticleImpl);
-        }
+    public byId(articleId: string, tagId: string): Promise<ArticleTag> {
+        return this.getResourceWithFields<ArticleTag>(this.format(ArticlePaths.tag, {
+            articleId,
+            tagId
+        }), ArticleTagImpl);
+    }
 
-        public delete(articleId: string, tagId: string): Promise<any> {
-            return this.toPromise(this.client.delete(this.format(ArticlePaths.tag, {articleId, tagId})));
-        }
+    public delete(articleId: string, tagId: string): Promise<any> {
+        return this.toPromise(this.client.delete(this.format(ArticlePaths.tag, {articleId, tagId})));
+    }
 
-        public create(articleId: string, tag: Article): Promise<Article> {
-            return this.postResourceWithFields<Article>(this.format(ArticlePaths.tags, {articleId}), ArticleImpl, {
-                data: tag
-            });
-        }
+    public create(articleId: string, tag: ArticleTag): Promise<ArticleTag> {
+        return this.postResourceWithFields<ArticleTag>(this.format(ArticlePaths.tags, {articleId}), ArticleTagImpl, {
+            data: tag
+        });
+    }
 
-        public update(articleId: string, tag: Article): Promise<Article> {
-            return this.postResourceWithFields<Article>(this.format(ArticlePaths.tag, {
-                articleId,
-                tagId: tag.id
-            }), ArticleImpl, {
-                data: tag
-            });
-        }
+    public update(articleId: string, tag: ArticleTag): Promise<ArticleTag> {
+        return this.postResourceWithFields<ArticleTag>(this.format(ArticlePaths.tag, {
+            articleId,
+            tagId: tag.id
+        }), ArticleTagImpl, {
+            data: tag
+        });
+    }
 }
 
 class CommentEndpoint extends BaseEndpoint {
 
-    public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<Article[]> {
-        return this.getResourceWithFields<Article[]>(this.format(ArticlePaths.comments, {articleId}), ArticleImpl, {params: paginationOptions});
+    public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<ArticleComment[]> {
+        return this.getResourceWithFields<ArticleComment[]>(this.format(ArticlePaths.comments, {articleId}), ArticleImpl, {params: paginationOptions});
     }
 
-    public byId(articleId: string, commentId: string): Promise<Article> {
-        return this.getResourceWithFields<Article>(this.format(ArticlePaths.comment, {
+    public byId(articleId: string, commentId: string): Promise<ArticleComment> {
+        return this.getResourceWithFields<ArticleComment>(this.format(ArticlePaths.comment, {
             articleId,
             commentId
         }), ArticleImpl);
@@ -139,17 +147,17 @@ class CommentEndpoint extends BaseEndpoint {
         return this.toPromise(this.client.delete(this.format(ArticlePaths.comment, {articleId, commentId})));
     }
 
-    public create(articleId: string, comment: Article): Promise<Article> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.comments, {articleId}), ArticleImpl, {
+    public create(articleId: string, comment: ArticleComment): Promise<ArticleComment> {
+        return this.postResourceWithFields<ArticleComment>(this.format(ArticlePaths.comments, {articleId}), ArticleCommentImpl, {
             data: comment
         });
     }
 
-    public update(articleId: string, comment: Article): Promise<Article> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.comment, {
+    public update(articleId: string, comment: ArticleComment): Promise<ArticleComment> {
+        return this.postResourceWithFields<ArticleComment>(this.format(ArticlePaths.comment, {
             articleId,
             commentId: comment.id
-        }), ArticleImpl, {
+        }), ArticleCommentImpl, {
             data: comment
         });
     }
