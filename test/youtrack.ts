@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import { Youtrack } from "../src";
 import * as dotenv from "dotenv";
+import * as fs from "fs";
 
 dotenv.config();
 
@@ -191,7 +192,7 @@ describe("Youtrack", () => {
          *
          * Make sure you have a test project in your Youtrack instance
          */
-        const testProjectName = "Test project";
+        const testProjectName = "Rulemate";
         it("can create, update and delete article", async () => {
             const youtrack = new Youtrack(configWithToken);
             const firstProject = (await youtrack.projects.all()).find(p => p.name === testProjectName);
@@ -222,6 +223,72 @@ describe("Youtrack", () => {
             const articles = await youtrack.articles.all();
             const deletedArticle = articles.find(a => a.id === updatedArticle.id);
             assert(deletedArticle === undefined);
+        })
+
+        describe("attachments endpoint", () => {
+            it("can fetch attachments", async () => {
+                const youtrack = new Youtrack(configWithToken);
+                const articles = await youtrack.articles.all();
+                const articleWithAttachments = articles.find(a => (a.attachments?.length ?? 0) > 0);
+                if (!articleWithAttachments || !articleWithAttachments.id) {
+                    throw new Error("No article with attachments found");
+                }
+
+                const attachments = await youtrack.articles.attachments.all(articleWithAttachments.id);
+                assert(attachments.length === articleWithAttachments.attachments?.length);
+            });
+
+            it("can upload attachment", async () => {
+                const youtrack = new Youtrack(configWithToken);
+                const file = fs.readFileSync("test/test.jpg");
+                const blob = new Blob([file], {type: "image/jpeg"});
+                const attachment = await youtrack.articles.attachments.upload("147-127", {"test.jpg": blob});
+                assert(attachment !== undefined);
+            });
+        })
+
+        describe("childArticles endpoint", () => {
+            it("can fetch childArticles", async () => {
+                const youtrack = new Youtrack(configWithToken);
+                const articles = await youtrack.articles.all();
+                const articleWithChildArticles = articles.find(a => (a.childArticles?.length ?? 0) > 0);
+                if (!articleWithChildArticles || !articleWithChildArticles.id) {
+                    throw new Error("No article with childArticles found");
+                }
+
+                const childArticles = await youtrack.articles.childArticles.all(articleWithChildArticles.id);
+                assert(childArticles.length === articleWithChildArticles.childArticles?.length);
+            });
+
+            /*
+            it("can fetch childArticle by id", async () => {
+                const youtrack = new Youtrack(configWithToken);
+                const articles = await youtrack.articles.all();
+                const articleWithChildArticles = articles.find(a => (a.childArticles?.length ?? 0) > 0);
+                if (!articleWithChildArticles || !articleWithChildArticles.id) {
+                    throw new Error("No article with childArticles found");
+                } else if (!articleWithChildArticles.childArticles?.[0].id) {
+                    throw new Error("No childArticle with an id found");
+                }
+
+                const childArticle = await youtrack.articles.childArticles.byId(articleWithChildArticles.id, articleWithChildArticles.childArticles[0].id);
+                assert(childArticle.id === articleWithChildArticles.childArticles?.[0].id);
+            });
+             */
+        })
+
+        describe("parentArticle endpoint", () => {
+            it("can fetch parentArticle", async () => {
+                const youtrack = new Youtrack(configWithToken);
+                const articles = await youtrack.articles.all();
+                const articleWithParentArticle = articles.find(a => a.parentArticle !== undefined);
+                if (!articleWithParentArticle || !articleWithParentArticle.id) {
+                    throw new Error("No article with parentArticle found");
+                }
+
+                const parentArticle = await youtrack.articles.parentArticle.byId(articleWithParentArticle.id);
+                assert(parentArticle.id === articleWithParentArticle.parentArticle?.id);
+            });
         })
     })
 });

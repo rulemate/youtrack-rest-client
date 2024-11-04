@@ -27,11 +27,11 @@ export const ArticlePaths = {
 class AttachmentEndpoint extends BaseEndpoint {
 
     public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<ArticleAttachment[]> {
-        return this.getResourceWithFields<Article[]>(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {params: paginationOptions});
+        return this.getResourceWithFields(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {params: paginationOptions});
     }
 
     public byId(articleId: string, attachmentId: string): Promise<ArticleAttachment> {
-        return this.getResourceWithFields<Article>(this.format(ArticlePaths.attachment, {
+        return this.getResourceWithFields(this.format(ArticlePaths.attachment, {
             articleId,
             attachmentId
         }), ArticleAttachmentImpl);
@@ -42,13 +42,26 @@ class AttachmentEndpoint extends BaseEndpoint {
     }
 
     public create(articleId: string, attachment: Article): Promise<ArticleAttachment> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {
+        return this.postResourceWithFields(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {
             data: attachment
         });
     }
 
+    public upload(articleId: string, blobs: { [name: string]: Blob }): Promise<ArticleAttachment[]> {
+        const formData = new FormData();
+        Object.keys(blobs).forEach(key => {
+            formData.append("upload", blobs[key], key);
+        });
+        return this.postResourceWithFields(this.format(ArticlePaths.attachments, {articleId}), ArticleAttachmentImpl, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            data: formData,
+        });
+    }
+
     public update(articleId: string, attachment: Article): Promise<ArticleAttachment> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.attachment, {
+        return this.postResourceWithFields(this.format(ArticlePaths.attachment, {
             articleId,
             attachmentId: attachment.id
         }), ArticleAttachmentImpl, {
@@ -60,11 +73,11 @@ class AttachmentEndpoint extends BaseEndpoint {
 class ChildArticleEndpoint extends BaseEndpoint {
 
     public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<Article[]> {
-        return this.getResourceWithFields<Article[]>(this.format(ArticlePaths.childArticles, {articleId}), ArticleImpl, {params: paginationOptions});
+        return this.getResourceWithFields(this.format(ArticlePaths.childArticles, {articleId}), ArticleImpl, {params: paginationOptions});
     }
 
     public byId(articleId: string, childArticleId: string): Promise<Article> {
-        return this.getResourceWithFields<Article>(this.format(ArticlePaths.childArticle, {
+        return this.getResourceWithFields(this.format(ArticlePaths.childArticle, {
             articleId,
             childArticleId
         }), ArticleImpl);
@@ -75,13 +88,13 @@ class ChildArticleEndpoint extends BaseEndpoint {
     }
 
     public create(articleId: string, childArticle: Article): Promise<Article> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.childArticles, {articleId}), ArticleImpl, {
+        return this.postResourceWithFields(this.format(ArticlePaths.childArticles, {articleId}), ArticleImpl, {
             data: childArticle
         });
     }
 
     public update(articleId: string, childArticle: Article): Promise<Article> {
-        return this.postResourceWithFields<Article>(this.format(ArticlePaths.childArticle, {
+        return this.postResourceWithFields(this.format(ArticlePaths.childArticle, {
             articleId,
             childArticleId: childArticle.id
         }), ArticleImpl, {
@@ -93,18 +106,18 @@ class ChildArticleEndpoint extends BaseEndpoint {
 class ParentArticleEndpoint extends BaseEndpoint {
 
     public byId(articleId: string): Promise<Article> {
-        return this.getResourceWithFields<Article>(this.format(ArticlePaths.parentArticle, {articleId}), ArticleImpl);
+        return this.getResourceWithFields(this.format(ArticlePaths.parentArticle, {articleId}), ArticleImpl);
     }
 }
 
 class TagEndpoint extends BaseEndpoint {
 
     public all(articleId: string, paginationOptions: PaginationOptions = {}): Promise<ArticleTag[]> {
-        return this.getResourceWithFields<ArticleTag[]>(this.format(ArticlePaths.tags, {articleId}), ArticleTagImpl, {params: paginationOptions});
+        return this.getResourceWithFields(this.format(ArticlePaths.tags, {articleId}), ArticleTagImpl, {params: paginationOptions});
     }
 
     public byId(articleId: string, tagId: string): Promise<ArticleTag> {
-        return this.getResourceWithFields<ArticleTag>(this.format(ArticlePaths.tag, {
+        return this.getResourceWithFields(this.format(ArticlePaths.tag, {
             articleId,
             tagId
         }), ArticleTagImpl);
@@ -115,13 +128,13 @@ class TagEndpoint extends BaseEndpoint {
     }
 
     public create(articleId: string, tag: ArticleTag): Promise<ArticleTag> {
-        return this.postResourceWithFields<ArticleTag>(this.format(ArticlePaths.tags, {articleId}), ArticleTagImpl, {
+        return this.postResourceWithFields(this.format(ArticlePaths.tags, {articleId}), ArticleTagImpl, {
             data: tag
         });
     }
 
     public update(articleId: string, tag: ArticleTag): Promise<ArticleTag> {
-        return this.postResourceWithFields<ArticleTag>(this.format(ArticlePaths.tag, {
+        return this.postResourceWithFields(this.format(ArticlePaths.tag, {
             articleId,
             tagId: tag.id
         }), ArticleTagImpl, {
